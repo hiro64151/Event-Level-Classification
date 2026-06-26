@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>事象レベル分類支援ツール</title>
+<style>
+  :root {
+    --blue: #2C5F8A;
+    --green: #2E7D4F;
+    --yellow: #B8860B;
+    --red: #C0392B;
+    --bg: #F4F6F8;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+    background: var(--bg);
+    color: #222;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    width: 100%;
+    background: var(--blue);
+    color: #fff;
+    padding: 14px 16px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  header h1 { margin: 0; font-size: 17px; font-weight: 600; }
+  header p { margin: 2px 0 0; font-size: 11px; opacity: 0.85; }
+
+  main {
+    width: 100%;
+    max-width: 480px;
+    padding: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .progress {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    margin-bottom: 16px;
+  }
+
+  .step-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+
+  .question {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .question-note {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+  }
+  .btn {
+    flex: 1;
+    padding: 16px 0;
+    border: none;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.05s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-yes { background: var(--blue); color: #fff; }
+  .btn-no { background: #E0E4E8; color: #333; }
+
+  .back-link {
+    text-align: center;
+    margin-top: 4px;
+  }
+  .back-link button {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  /* result */
+  .result-card {
+    border-radius: 14px;
+    padding: 22px 18px;
+    color: #fff;
+    margin-bottom: 14px;
+  }
+  .result-card.occurrence { background: var(--green); }
+  .result-card.incident { background: var(--yellow); }
+  .result-card.accident { background: var(--red); }
+
+  .result-kubun {
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 2px;
+  }
+  .result-level {
+    font-size: 30px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .result-def {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .info-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .info-card h3 {
+    font-size: 13px;
+    color: var(--blue);
+    margin: 0 0 6px;
+  }
+  .info-card.caution {
+    border: 2px solid var(--yellow);
+  }
+  .info-card.caution h3 { color: var(--yellow); }
+
+  .reset-btn {
+    width: 100%;
+    padding: 16px 0;
+    border: none;
+    border-radius: 10px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .reset-btn:active { opacity: 0.85; }
+
+  footer {
+    width: 100%;
+    text-align: center;
+    font-size: 11px;
+    color: #999;
+    padding: 14px 16px 24px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>事象レベル分類支援ツール</h1>
+  <p>神戸市立医療センター中央市民病院 医療安全管理室｜SafeMaster入力前の判断支援</p>
+</header>
+
+<main>
+  <div class="progress" id="progress"></div>
+  <div id="app"></div>
+</main>
+
+<footer>
+  本ツールは判断支援用です。最終的な区分・レベルの確定は医療安全管理者の判断によります。<br>
+  本資料の記録・保存は行いません。内線3311
+</footer>
+
+<script>
+/* ===== 質問・分岐定義 =====
+   各ノードは type: "question" | "result"
+   question: text, note(optional), yes(次ノードID), no(次ノードID)
+   result: kubun(オカレンス/インシデント/アクシデント), level, def, cardClass
+*/
+const NODES = {
+
+  step1: {
+    type: "question",
+    stepLabel: "STEP 1",
+    text: "再手術・ICU入室・死亡に至ったか？",
+    note: "（レベル3b〜5相当の重大な転帰）",
+    yes: "sub1a",
+    no: "step2"
+  },
+  sub1a: {
+    type: "question",
+    stepLabel: "STEP 1 - 詳細",
+    text: "死亡したか？",
+    note: "（原疾患の自然経過によるものを除く）",
+    yes: "result_5",
+    no: "sub1b"
+  },
+  sub1b: {
+    type: "question",
+    stepLabel: "STEP 1 - 詳細",
+    text: "有意な機能障害や美容上の問題を伴う、永続的な障害・後遺症が残ったか？",
+    yes: "result_4b",
+    no: "result_3b"
+  },
+
+  step2: {
+    type: "question",
+    stepLabel: "STEP 2",
+    text: "永続的な障害・後遺症が残ったか？",
+    note: "（再手術・ICU入室・死亡には至っていない場合）",
+    yes: "sub2",
+    no: "step3"
+  },
+  sub2: {
+    type: "question",
+    stepLabel: "STEP 2 - 詳細",
+    text: "有意な機能障害や美容上の問題を伴うか？",
+    yes: "result_4b",
+    no: "result_4a"
+  },
+
+  step3: {
+    type: "question",
+    stepLabel: "STEP 3",
+    text: "予防可能だったか？",
+    note: "（エラー・対応遅延・手順逸脱の有無）",
+    yes: "sqA_incident",
+    no: "step4"
+  },
+  step4: {
+    type: "question",
+    stepLabel: "STEP 4",
+    text: "患者への影響があったか？",
+    note: "（観察強化・軽微な不快感を含む）",
+    yes: "sqA_occurrence",
+    no: "result_0_incident"
+  },
+
+  sqA_incident: {
+    type: "question",
+    stepLabel: "影響レベル判定",
+    text: "患者への影響はあったか？",
+    note: "（観察強化・軽微な不快感を含む）",
+    yes: "sqB_incident",
+    no: "result_0_incident"
+  },
+  sqB_incident: {
+    type: "question",
+    stepLabel: "影響レベル判定",
+    text: "治療・処置を要したか？",
+    note: "（投薬調整・消毒・湿布など）",
+    yes: "sqC_incident",
+    no: "result_1_incident"
+  },
+  sqC_incident: {
+    type: "question",
+    stepLabel: "影響レベル判定",
+    text: "全身投与または外科的処置を要したか？",
+    note: "（抗菌薬全身投与、創部開放ドレナージなど）",
+    yes: "result_3a_incident",
+    no: "result_2_incident"
+  },
+
+  sqA_occurrence: {
+    type: "question",
+    stepLabel: "影響レベル判定",
+    text: "患者への影響はあったか？",
+    note: "（観察強化・軽微な不快感を含む）",
+    yes: "sqB_occurrence",
+    no: "result_0_occurrence"
+  },
+  sqB_occurrence: {
+    type: "question",
+    stepLabel: "影響レベル判定",
+    text: "治療・処置を要したか？",
+    note: "（投薬調整・消毒・湿布など）",
+    yes: "sqC_occurrence",
+    no: "result_1_occurrence"
+  },
+  sqC_occurrence: {
+    type: "question",
+    stepLabel: "影響レベル判定",
+    text: "全身投与または外科的処置を要したか？",
+    note: "（抗菌薬全身投与、創部開放ドレナージなど）",
+    yes: "result_3a_occurrence",
+    no: "result_2_occurrence"
+  },
+
+  /* ===== 結果ノード ===== */
+  result_5: {
+    type: "result", cardClass: "accident",
+    kubun: "アクシデント", level: "レベル 5",
+    def: "死亡（原疾患の自然経過によるものを除く）。医療事故調査制度の対象該当性を検討してください。"
+  },
+  result_4b: {
+    type: "result", cardClass: "accident",
+    kubun: "アクシデント", level: "レベル 4b",
+    def: "永続的な障害・後遺症が残り、有意な機能障害や美容上の問題を伴う。"
+  },
+  result_4a: {
+    type: "result", cardClass: "accident",
+    kubun: "アクシデント", level: "レベル 4a",
+    def: "永続的な障害・後遺症が残ったが、有意な機能障害や美容上の問題は問わない。"
+  },
+  result_3b: {
+    type: "result", cardClass: "accident",
+    kubun: "アクシデント", level: "レベル 3b",
+    def: "生命の危機に瀕した（再手術・ICU入室など）濃厚な処置・治療を要した事象。予防可能性は問いません。"
+  },
+
+  result_0_incident: {
+    type: "result", cardClass: "incident",
+    kubun: "インシデント", level: "レベル 0",
+    def: "患者への影響なし（実施前に気づき修正できた等）。エラー・対応遅延・手順逸脱があったため、インシデントとして報告してください。"
+  },
+  result_1_incident: {
+    type: "result", cardClass: "incident",
+    kubun: "インシデント", level: "レベル 1",
+    def: "患者への影響軽微、観察のみで自然回復した事象（点滴速度の軽微なずれ等）。RCA（根本原因分析）検討の対象です。"
+  },
+  result_2_incident: {
+    type: "result", cardClass: "incident",
+    kubun: "インシデント", level: "レベル 2",
+    def: "バイタル変動なく、簡単な処置で対応できた事象（軽度SSIへの外用薬対応等）。RCA検討の対象です。"
+  },
+  result_3a_incident: {
+    type: "result", cardClass: "incident",
+    kubun: "インシデント", level: "レベル 3a",
+    def: "全身投与や外科的局所処置など濃厚な処置・治療を要した事象（SSI→抗菌薬全身投与、創部開放ドレナージ等）。RCA検討の対象です。"
+  },
+
+  result_0_occurrence: {
+    type: "result", cardClass: "occurrence",
+    kubun: "オカレンス", level: "レベル 0",
+    def: "Non-preventableで、患者への影響もほぼない事象。合併症データとして蓄積します。",
+    caution: true
+  },
+  result_1_occurrence: {
+    type: "result", cardClass: "occurrence",
+    kubun: "オカレンス", level: "レベル 1",
+    def: "Non-preventableで、患者への影響軽微・観察のみで自然回復した事象。",
+    caution: true
+  },
+  result_2_occurrence: {
+    type: "result", cardClass: "occurrence",
+    kubun: "オカレンス", level: "レベル 2",
+    def: "Non-preventableで、バイタル変動なく簡単な処置で対応できた事象（軽度SSIへの外用薬対応等）。",
+    caution: true
+  },
+  result_3a_occurrence: {
+    type: "result", cardClass: "occurrence",
+    kubun: "オカレンス", level: "レベル 3a",
+    def: "Non-preventableだが、全身投与や外科的局所処置など濃厚な処置・治療を要した事象（汚染創術後の軽度SSI等）。",
+    caution: true
+  }
+};
+
+const START = "step1";
+let history = [START];
+
+function render() {
+  const id = history[history.length - 1];
+  const node = NODES[id];
+  const app = document.getElementById("app");
+  const progress = document.getElementById("progress");
+
+  if (node.type === "question") {
+    progress.textContent = "判断フロー進行中";
+    app.innerHTML = `
+      <div class="card">
+        <div class="step-label">${node.stepLabel}</div>
+        <div class="question">${node.text}</div>
+        ${node.note ? `<div class="question-note">${node.note}</div>` : ""}
+        <div class="btn-row">
+          <button class="btn btn-no" onclick="answer('no')">いいえ</button>
+          <button class="btn btn-yes" onclick="answer('yes')">はい</button>
+        </div>
+      </div>
+      ${history.length > 1 ? `<div class="back-link"><button onclick="goBack()">← 1つ前の質問に戻る</button></div>` : ""}
+    `;
+  } else {
+    progress.textContent = "判定結果";
+    let html = `
+      <div class="result-card ${node.cardClass}">
+        <div class="result-kubun">${node.kubun}</div>
+        <div class="result-level">${node.level}</div>
+        <div class="result-def">${node.def}</div>
+      </div>
+    `;
+    if (node.caution) {
+      html += `
+        <div class="info-card caution">
+          <h3>⚠ オカレンス報告の記載必須事項</h3>
+          「医療行為上の問題なし」「術前より高リスク例であり予測範囲内の合併症」など、背景・評価を明記してください。現場への不当な責任追及を防ぎ、データとして有効活用するために必要です。
+        </div>
+      `;
+    }
+    html += `
+      <div class="info-card">
+        <h3>ご注意</h3>
+        本判定はSafeMaster入力前の判断支援です。最終的な区分・レベルの確定は医療安全管理者の判断によります。
+      </div>
+      <button class="reset-btn" onclick="restart()">最初にもどる</button>
+      ${history.length > 1 ? `<div class="back-link"><button onclick="goBack()">← 1つ前の質問に戻る</button></div>` : ""}
+    `;
+    app.innerHTML = html;
+  }
+}
+
+function answer(yn) {
+  const node = NODES[history[history.length - 1]];
+  history.push(yn === "yes" ? node.yes : node.no);
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function goBack() {
+  if (history.length > 1) history.pop();
+  render();
+}
+
+function restart() {
+  history = [START];
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
