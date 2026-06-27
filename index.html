@@ -10,6 +10,7 @@
     --green: #2E7D4F;
     --yellow: #B8860B;
     --red: #C0392B;
+    --gray: #6B7785;
     --bg: #F4F6F8;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -121,6 +122,7 @@
   .result-card.occurrence { background: var(--green); }
   .result-card.incident { background: var(--yellow); }
   .result-card.accident { background: var(--red); }
+  .result-card.hiyari { background: var(--gray); }
 
   .result-kubun {
     font-size: 14px;
@@ -203,6 +205,29 @@
    result: kubun(オカレンス/インシデント/アクシデント), level, def, cardClass
 */
 const NODES = {
+
+  step0_hiyari: {
+    type: "question",
+    stepLabel: "事前確認",
+    text: "間違いは、患者に実施される前に発見されたか？",
+    note: "（ヒヤリハット：実際には患者への影響は生じていない場合）",
+    yes: "hiyari_q1",
+    no: "step1"
+  },
+  hiyari_q1: {
+    type: "question",
+    stepLabel: "ヒヤリハット - 詳細",
+    text: "仮に実施されていた場合、生命に影響しうるような大きな影響が想定されるか？",
+    yes: "result_003",
+    no: "hiyari_q2"
+  },
+  hiyari_q2: {
+    type: "question",
+    stepLabel: "ヒヤリハット - 詳細",
+    text: "仮に実施されていた場合、処置が必要な中等度の影響が想定されるか？",
+    yes: "result_002",
+    no: "result_001"
+  },
 
   step1: {
     type: "question",
@@ -312,6 +337,22 @@ const NODES = {
   },
 
   /* ===== 結果ノード ===== */
+  result_003: {
+    type: "result", cardClass: "hiyari",
+    kubun: "ヒヤリハット", level: "レベル 0.03",
+    def: "間違いが発生したが、患者に実施される前に発見された。仮に実施されていた場合、身体への影響は大きい（生命に影響しうる）と考えられる。"
+  },
+  result_002: {
+    type: "result", cardClass: "hiyari",
+    kubun: "ヒヤリハット", level: "レベル 0.02",
+    def: "間違いが発生したが、患者に実施される前に発見された。仮に実施されていた場合、患者への影響は中等度（処置が必要）と考えられる。"
+  },
+  result_001: {
+    type: "result", cardClass: "hiyari",
+    kubun: "ヒヤリハット", level: "レベル 0.01",
+    def: "間違いが発生したが、患者に実施される前に発見された。仮に実施されても、患者への影響は小さかった（処置不要）と考えられる。"
+  },
+
   result_5: {
     type: "result", cardClass: "accident",
     kubun: "アクシデント", level: "レベル 5",
@@ -380,7 +421,7 @@ const NODES = {
   }
 };
 
-const START = "step1";
+const START = "step0_hiyari";
 let history = [START];
 
 function render() {
