@@ -282,7 +282,7 @@ const NODES = {
     stepLabel: "STEP 4",
     text: "患者への影響があったか？",
     note: "（観察強化・軽微な不快感を含む）",
-    yes: "sqA_occurrence",
+    yes: "sqB_occurrence",
     no: "result_0_incident"
   },
 
@@ -311,14 +311,6 @@ const NODES = {
     no: "result_2_incident"
   },
 
-  sqA_occurrence: {
-    type: "question",
-    stepLabel: "影響レベル判定",
-    text: "患者への影響はあったか？",
-    note: "（観察強化・軽微な不快感を含む）",
-    yes: "sqB_occurrence",
-    no: "result_0_occurrence"
-  },
   sqB_occurrence: {
     type: "question",
     stepLabel: "影響レベル判定",
@@ -395,12 +387,6 @@ const NODES = {
     def: "全身投与や外科的局所処置など濃厚な処置・治療を要した事象（SSI→抗菌薬全身投与、創部開放ドレナージ等）。RCA検討の対象です。"
   },
 
-  result_0_occurrence: {
-    type: "result", cardClass: "occurrence",
-    kubun: "オカレンス", level: "レベル 0",
-    def: "Non-preventableで、患者への影響もほぼない事象。合併症データとして蓄積します。",
-    caution: true
-  },
   result_1_occurrence: {
     type: "result", cardClass: "occurrence",
     kubun: "オカレンス", level: "レベル 1",
