@@ -283,30 +283,22 @@ const NODES = {
     text: "患者への影響があったか？",
     note: "（観察強化・軽微な不快感を含む）",
     yes: "sqB_occurrence",
-    no: "result_0_incident"
+    no: "result_1_incident"
   },
 
   sqA_incident: {
     type: "question",
     stepLabel: "影響レベル判定",
-    text: "患者への影響はあったか？",
-    note: "（観察強化・軽微な不快感を含む）",
+    text: "患者への実害はあったか？",
+    note: "（実害を与えた可能性が否定できない場合を含む）",
     yes: "sqB_incident",
-    no: "result_0_incident"
+    no: "result_1_incident"
   },
   sqB_incident: {
     type: "question",
     stepLabel: "影響レベル判定",
     text: "治療・処置を要したか？",
-    note: "（投薬調整・消毒・湿布など）",
-    yes: "sqC_incident",
-    no: "result_1_incident"
-  },
-  sqC_incident: {
-    type: "question",
-    stepLabel: "影響レベル判定",
-    text: "全身投与または外科的処置を要したか？",
-    note: "（抗菌薬全身投与、創部開放ドレナージなど）",
+    note: "（観察強化や安全確認の検査のみで済んだ場合は「いいえ」）",
     yes: "result_3a_incident",
     no: "result_2_incident"
   },
@@ -315,15 +307,7 @@ const NODES = {
     type: "question",
     stepLabel: "影響レベル判定",
     text: "治療・処置を要したか？",
-    note: "（投薬調整・消毒・湿布など）",
-    yes: "sqC_occurrence",
-    no: "result_1_occurrence"
-  },
-  sqC_occurrence: {
-    type: "question",
-    stepLabel: "影響レベル判定",
-    text: "全身投与または外科的処置を要したか？",
-    note: "（抗菌薬全身投与、創部開放ドレナージなど）",
+    note: "（観察強化や安全確認の検査のみで済んだ場合は「いいえ」）",
     yes: "result_3a_occurrence",
     no: "result_2_occurrence"
   },
@@ -366,43 +350,32 @@ const NODES = {
     def: "生命の危機に瀕した（再手術・ICU入室など）濃厚な処置・治療を要した事象。予防可能性は問いません。"
   },
 
-  result_0_incident: {
-    type: "result", cardClass: "incident",
-    kubun: "インシデント", level: "レベル 0",
-    def: "実施されたが、結果として患者への影響はなかった事象。エラー・対応遅延・手順逸脱があった（または非予防可能だった）ため、インシデントとして報告してください。"
-  },
   result_1_incident: {
     type: "result", cardClass: "incident",
     kubun: "インシデント", level: "レベル 1",
-    def: "患者への影響軽微、観察のみで自然回復した事象（点滴速度の軽微なずれ等）。RCA（根本原因分析）検討の対象です。"
+    def: "実施されたが、患者への実害はなかった事象（実害を与えた可能性が否定できない場合を含む）。RCA（根本原因分析）検討の対象です。"
   },
   result_2_incident: {
     type: "result", cardClass: "incident",
     kubun: "インシデント", level: "レベル 2",
-    def: "バイタル変動なく、簡単な処置で対応できた事象（軽度SSIへの外用薬対応等）。RCA検討の対象です。"
+    def: "実害はあったが、治療・処置は不要だった事象（観察強化、バイタルサインの軽度変化、安全確認のための検査など）。RCA検討の対象です。"
   },
   result_3a_incident: {
     type: "result", cardClass: "incident",
     kubun: "インシデント", level: "レベル 3a",
-    def: "全身投与や外科的局所処置など濃厚な処置・治療を要した事象（SSI→抗菌薬全身投与、創部開放ドレナージ等）。RCA検討の対象です。"
+    def: "簡単な処置・治療を要した事象（消毒、湿布、軽微な縫合、鎮痛剤投与など）。RCA検討の対象です。"
   },
 
-  result_1_occurrence: {
-    type: "result", cardClass: "occurrence",
-    kubun: "オカレンス", level: "レベル 1",
-    def: "Non-preventableで、患者への影響軽微・観察のみで自然回復した事象。",
-    caution: true
-  },
   result_2_occurrence: {
     type: "result", cardClass: "occurrence",
     kubun: "オカレンス", level: "レベル 2",
-    def: "Non-preventableで、バイタル変動なく簡単な処置で対応できた事象（軽度SSIへの外用薬対応等）。",
+    def: "Non-preventableで、治療・処置は不要だった事象（観察強化、安全確認のための検査など）。",
     caution: true
   },
   result_3a_occurrence: {
     type: "result", cardClass: "occurrence",
     kubun: "オカレンス", level: "レベル 3a",
-    def: "Non-preventableだが、全身投与や外科的局所処置など濃厚な処置・治療を要した事象（汚染創術後の軽度SSI等）。",
+    def: "Non-preventableで、簡単な処置・治療を要した事象（消毒、湿布、軽微な縫合、鎮痛剤投与など）。",
     caution: true
   }
 };
