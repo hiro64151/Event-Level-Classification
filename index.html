@@ -275,15 +275,7 @@ const NODES = {
     text: "予防可能だったか？",
     note: "（エラー・対応遅延・手順逸脱の有無）",
     yes: "sqA_incident",
-    no: "step4"
-  },
-  step4: {
-    type: "question",
-    stepLabel: "STEP 4",
-    text: "患者への影響があったか？",
-    note: "（観察強化・軽微な不快感を含む）",
-    yes: "sqB_occurrence",
-    no: "result_1_occurrence"
+    no: "sqA_occurrence"
   },
 
   sqA_incident: {
@@ -303,6 +295,14 @@ const NODES = {
     no: "result_2_incident"
   },
 
+  sqA_occurrence: {
+    type: "question",
+    stepLabel: "影響レベル判定",
+    text: "患者への実害はあったか？",
+    note: "（実害を与えた可能性が否定できない場合を含む）",
+    yes: "sqB_occurrence",
+    no: "result_1_occurrence"
+  },
   sqB_occurrence: {
     type: "question",
     stepLabel: "影響レベル判定",
