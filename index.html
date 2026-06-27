@@ -283,7 +283,7 @@ const NODES = {
     text: "患者への影響があったか？",
     note: "（観察強化・軽微な不快感を含む）",
     yes: "sqB_occurrence",
-    no: "result_1_incident"
+    no: "result_1_occurrence"
   },
 
   sqA_incident: {
@@ -366,6 +366,12 @@ const NODES = {
     def: "簡単な処置・治療を要した事象（消毒、湿布、軽微な縫合、鎮痛剤投与など）。RCA検討の対象です。"
   },
 
+  result_1_occurrence: {
+    type: "result", cardClass: "occurrence",
+    kubun: "オカレンス", level: "レベル 1",
+    def: "Non-preventableで、患者への実害もなかった事象（実害を与えた可能性が否定できない場合を含む）。合併症データとして蓄積します。",
+    caution: true
+  },
   result_2_occurrence: {
     type: "result", cardClass: "occurrence",
     kubun: "オカレンス", level: "レベル 2",
